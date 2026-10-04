@@ -1,5 +1,5 @@
 """
-DomainPulse - Authoritative Registry & WHOIS Domain Availability Scraper.
+Authoritative Registry & WHOIS Domain Availability Scraper.
 Main entry point. Launches the native desktop GUI by default, or runs CLI mode.
 """
 
@@ -53,7 +53,7 @@ def run_cli_scan(args):
 
     mode_name = "Strict Registry WHOIS" if args.strict_whois else "Smart Hybrid (DNS Filter + Registry WHOIS)"
     print("=" * 72)
-    print("  DOMAINPULSE - Authoritative Registry & WHOIS Scanner")
+    print("  DOMAIN AVAILABILITY SCRAPER - Authoritative Registry & WHOIS")
     print(f"  Target: {len(domains)} candidate domains")
     print(f"  Engine: {mode_name}")
     print(f"  Concurrency: {args.concurrency} workers | Delay: {args.delay}ms")
@@ -109,7 +109,7 @@ def run_cli_scan(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="DomainPulse - Authoritative Registry WHOIS Domain Scraper")
+    parser = argparse.ArgumentParser(description="Domain Availability Scraper - Authoritative Registry & WHOIS")
     parser.add_argument("--cli", action="store_true", help="Run in command-line mode instead of Desktop GUI")
     parser.add_argument("--web", action="store_true", help="Run local web server instead of Desktop GUI")
     parser.add_argument("--port", type=int, default=8765, help="Port for optional web server (default: 8765)")

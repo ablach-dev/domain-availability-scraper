@@ -39,7 +39,7 @@ class DomainPulseApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("DomainPulse - Registry Domain Availability Scraper")
+        self.title("Domain Availability Scraper")
         self.geometry("1150x760")
         self.minsize(980, 620)
 
