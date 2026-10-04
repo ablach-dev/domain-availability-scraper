@@ -189,7 +189,7 @@ class ScannerInterface(QWidget):
         """)
 
         # -------------------------------------------------------------
-        # LEFT PANEL: Unified Single-Color Container (Zero-Scroll on Default Res)
+        # LEFT PANEL: Flat, Zero-Rounded-Corner Container
         # -------------------------------------------------------------
         left_scroll = QScrollArea()
         left_scroll.setWidgetResizable(True)
@@ -200,7 +200,8 @@ class ScannerInterface(QWidget):
         left_scroll.setStyleSheet("""
             QScrollArea {
                 border: none;
-                background: transparent;
+                border-radius: 0px;
+                background: #141416;
             }
             QScrollBar:vertical {
                 background: transparent;
@@ -220,8 +221,17 @@ class ScannerInterface(QWidget):
             }
         """)
 
-        # Unified single-tone container (one cohesive background, symmetric padding)
-        left_container = CardWidget()
+        # Flat single-tone container: completely flush with ZERO rounded corners
+        left_container = QFrame()
+        left_container.setObjectName("leftContainer")
+        left_container.setStyleSheet("""
+            #leftContainer {
+                background-color: #141416;
+                border: none;
+                border-right: 1px solid #27272a;
+                border-radius: 0px;
+            }
+        """)
         left_layout = QVBoxLayout(left_container)
         left_layout.setContentsMargins(16, 12, 16, 12)
         left_layout.setSpacing(8)
@@ -1260,11 +1270,16 @@ class MainWindow(FluentWindow):
         self.resize(1540, 880)
         self.setMinimumSize(1100, 680)
 
-        # Lock navigation interface permanently to a tiny 48px icon-only rail with NO hamburger menu and NO text
-        self.navigationInterface.setMenuButtonVisible(False)
-        self.navigationInterface.setCollapsible(False)
-        self.navigationInterface.setFixedWidth(48)
-        self.navigationInterface.setExpandWidth(48)
+        # Lock navigation interface permanently to a tiny 48px icon-only rail:
+        # Prevent NavigationPanel from automatically expanding to 322px when window width >= 1008px
+        nav = self.navigationInterface
+        panel = getattr(nav, 'panel', nav)
+        panel.setMenuButtonVisible(False)
+        panel.setCollapsible(False)
+        panel.setMinimumExpandWidth(99999)
+        panel.setExpandWidth(48)
+        nav.setFixedWidth(48)
+        panel.setFixedWidth(48)
 
         # Navigation interfaces
         self.scanner_interface = ScannerInterface(self)
@@ -1293,6 +1308,12 @@ class MainWindow(FluentWindow):
             "",
             NavigationItemPosition.BOTTOM
         )
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self.navigationInterface.setFixedWidth(48)
+        panel = getattr(self.navigationInterface, 'panel', self.navigationInterface)
+        panel.setFixedWidth(48)
 
 
 def launch_fluent_app():
