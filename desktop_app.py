@@ -904,9 +904,12 @@ class DomainPulseApp(ctk.CTk):
     def _init_context_menu(self):
         self.menu = tk.Menu(self, tearoff=0, bg="#27272a", fg="#f4f4f5", activebackground="#2563eb", activeforeground="#ffffff", font=("Segoe UI", 9))
         self.menu.add_command(label="Copy Domain", command=self._copy_selected_domain)
-        self.menu.add_command(label="Register on Porkbun", command=lambda: self._open_registrar("porkbun"))
+        self.menu.add_separator()
+        self.menu.add_command(label="Register on GoDaddy (Default)", command=lambda: self._open_registrar("godaddy"))
+        self.menu.add_command(label="Register on Cloudflare", command=lambda: self._open_registrar("cloudflare"))
+        self.menu.add_command(label="Register on Dynadot", command=lambda: self._open_registrar("dynadot"))
         self.menu.add_command(label="Register on Namecheap", command=lambda: self._open_registrar("namecheap"))
-        self.menu.add_command(label="Register on GoDaddy", command=lambda: self._open_registrar("godaddy"))
+        self.menu.add_command(label="Register on Porkbun", command=lambda: self._open_registrar("porkbun"))
         self.menu.add_separator()
         self.menu.add_command(label="View Full WHOIS Snippet", command=self._show_whois_details)
 
@@ -917,7 +920,7 @@ class DomainPulseApp(ctk.CTk):
             self.menu.tk_popup(event.x_root, event.y_root)
 
     def _on_row_double_click(self, event):
-        self._open_registrar("porkbun")
+        self._open_registrar("godaddy")
 
     def _get_selected_domain(self) -> Optional[str]:
         selected = self.tree.selection()
@@ -933,10 +936,13 @@ class DomainPulseApp(ctk.CTk):
             self.clipboard_append(domain)
             self.lbl_status_msg.configure(text=f"Copied {domain} to clipboard.")
 
-    def _open_registrar(self, registrar: str):
+    def _open_registrar(self, registrar: str = "godaddy"):
         domain = self._get_selected_domain()
         if not domain:
             return
+        links = get_registrar_links(domain)
+        url = links.get(registrar.lower(), links["godaddy"])
+        webbrowser.open(url)
         links = get_registrar_links(domain)
         url = links.get(registrar, links["porkbun"])
         webbrowser.open(url)

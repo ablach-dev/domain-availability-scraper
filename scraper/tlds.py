@@ -27,10 +27,11 @@ def format_tld(tld: str) -> str:
     return tld
 
 def get_registrar_links(domain: str) -> dict:
-    """Generate direct search/buy URLs for major registrars."""
+    """Generate direct search/buy URLs for major registrars in preferred order."""
     return {
-        "porkbun": f"https://porkbun.com/checkout/search?q={domain}",
-        "namecheap": f"https://www.namecheap.com/domains/registration/results/?domain={domain}",
         "godaddy": f"https://www.godaddy.com/domainsearch/find?checkAvail=1&domainToCheck={domain}",
         "cloudflare": f"https://www.cloudflare.com/products/registrar/",
+        "dynadot": f"https://www.dynadot.com/domain/search?domain={domain}",
+        "namecheap": f"https://www.namecheap.com/domains/registration/results/?domain={domain}",
+        "porkbun": f"https://porkbun.com/checkout/search?q={domain}",
     }
