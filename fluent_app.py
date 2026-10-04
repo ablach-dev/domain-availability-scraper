@@ -2,7 +2,8 @@
 Domain Availability Scraper - Professional Windows 11 Desktop Application.
 Authoritative Registry WHOIS & RDAP verification engine with PyQt6 and PyQt6-Fluent-Widgets.
 High-performance architecture with 120 FPS batch-buffered GUI rendering,
-compact zero-overflow left panel, and expansive high-resolution data table.
+unified single-tone left panel, symmetric spacing, zero-scroll default layout,
+and fixed icon-only navigation.
 """
 
 import sys
@@ -162,8 +163,9 @@ class ScannerInterface(QWidget):
         # TLD Pill Buttons Dictionary: tld_str -> PillPushButton
         self.tld_pills: Dict[str, PillPushButton] = {}
         self.common_tlds = [
-            ".com", ".io", ".ai", ".co", ".net", ".org",
-            ".app", ".dev", ".xyz", ".tech", ".sh", ".me"
+            ".com", ".io", ".ai", ".co",
+            ".net", ".org", ".app", ".dev",
+            ".xyz", ".tech", ".sh", ".me"
         ]
 
         self._init_ui()
@@ -187,13 +189,13 @@ class ScannerInterface(QWidget):
         """)
 
         # -------------------------------------------------------------
-        # LEFT PANEL: Compact, Zero-Horizontal-Scroll Configuration Area
+        # LEFT PANEL: Unified Single-Color Container (Zero-Scroll on Default Res)
         # -------------------------------------------------------------
         left_scroll = QScrollArea()
         left_scroll.setWidgetResizable(True)
         left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         left_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        left_scroll.setMinimumWidth(350)
+        left_scroll.setMinimumWidth(360)
         left_scroll.viewport().setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
         left_scroll.setStyleSheet("""
             QScrollArea {
@@ -202,12 +204,12 @@ class ScannerInterface(QWidget):
             }
             QScrollBar:vertical {
                 background: transparent;
-                width: 7px;
+                width: 6px;
                 margin: 0px;
             }
             QScrollBar::handle:vertical {
                 background: #3f3f46;
-                min-height: 28px;
+                min-height: 24px;
                 border-radius: 3px;
             }
             QScrollBar::handle:vertical:hover {
@@ -218,35 +220,28 @@ class ScannerInterface(QWidget):
             }
         """)
 
-        left_widget = QWidget()
-        left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(2, 2, 8, 4)
-        left_layout.setSpacing(12)
+        # Unified single-tone container (one cohesive background, symmetric padding)
+        left_container = CardWidget()
+        left_layout = QVBoxLayout(left_container)
+        left_layout.setContentsMargins(16, 12, 16, 12)
+        left_layout.setSpacing(8)
 
         # -------------------------------------------------------------
-        # CARD 1: Mode & Search Parameters (Compact)
+        # SECTION 1: Search Parameters
         # -------------------------------------------------------------
-        card_params = CardWidget()
-        layout_params = QVBoxLayout(card_params)
-        layout_params.setContentsMargins(14, 14, 14, 14)
-        layout_params.setSpacing(10)
-
-        # Section Header
         lbl_params_title = StrongBodyLabel("Search Parameters")
-        lbl_params_desc = CaptionLabel("Select generation mode and configure rules")
-        lbl_params_desc.setTextColor("#a1a1aa", "#71717a")
-        layout_params.addWidget(lbl_params_title)
-        layout_params.addWidget(lbl_params_desc)
+        left_layout.addWidget(lbl_params_title)
 
-        # Mode Segmented Tabs (Compact ~250px)
+        # Mode Segmented Tabs
         self.segment = SegmentedWidget(self)
         self.segment.addItem("batch", "List")
         self.segment.addItem("letters", "Length")
         self.segment.addItem("keyword", "Keywords")
         self.segment.addItem("brandables", "Roots")
         self.segment.setCurrentItem("batch")
+        self.segment.setFixedHeight(30)
         self.segment.currentItemChanged.connect(self._on_segment_changed)
-        layout_params.addWidget(self.segment)
+        left_layout.addWidget(self.segment)
 
         # Mode Stacked Pages
         self.stacked_modes = QStackedWidget()
@@ -254,25 +249,21 @@ class ScannerInterface(QWidget):
         self._build_letter_page()
         self._build_keyword_page()
         self._build_brandables_page()
-        layout_params.addWidget(self.stacked_modes)
+        left_layout.addWidget(self.stacked_modes)
 
-        left_layout.addWidget(card_params)
+        # Separator line
+        sep1 = QFrame()
+        sep1.setFrameShape(QFrame.Shape.HLine)
+        sep1.setStyleSheet("color: #27272a;")
+        left_layout.addWidget(sep1)
 
         # -------------------------------------------------------------
-        # CARD 2: TLD Extensions with Interactive Pills & Add Button
+        # SECTION 2: Domain Extensions
         # -------------------------------------------------------------
-        card_tlds = CardWidget()
-        layout_tlds = QVBoxLayout(card_tlds)
-        layout_tlds.setContentsMargins(14, 14, 14, 14)
-        layout_tlds.setSpacing(10)
-
         lbl_tld_title = StrongBodyLabel("Domain Extensions")
-        lbl_tld_desc = CaptionLabel("Toggle target extensions or enter custom TLDs")
-        lbl_tld_desc.setTextColor("#a1a1aa", "#71717a")
-        layout_tlds.addWidget(lbl_tld_title)
-        layout_tlds.addWidget(lbl_tld_desc)
+        left_layout.addWidget(lbl_tld_title)
 
-        # Preset Quick Filter Bar (Compact 5 pills)
+        # Preset Quick Filter Bar
         preset_bar = QHBoxLayout()
         preset_bar.setContentsMargins(0, 0, 0, 0)
         preset_bar.setSpacing(4)
@@ -290,9 +281,9 @@ class ScannerInterface(QWidget):
             btn.clicked.connect(lambda checked, k=key: self._apply_tld_preset(k))
             preset_bar.addWidget(btn)
         preset_bar.addStretch()
-        layout_tlds.addLayout(preset_bar)
+        left_layout.addLayout(preset_bar)
 
-        # Grid of Modern Pill Buttons (3 columns)
+        # Grid of Modern Pill Buttons (4 columns x 3 rows for compact vertical height)
         self.tld_grid = QGridLayout()
         self.tld_grid.setSpacing(6)
         self.tld_grid.setContentsMargins(0, 0, 0, 0)
@@ -305,9 +296,9 @@ class ScannerInterface(QWidget):
             pill.setFixedHeight(28)
             pill.setFont(QFont("Consolas", 9, QFont.Weight.Bold))
             self.tld_pills[tld] = pill
-            self.tld_grid.addWidget(pill, idx // 3, idx % 3)
+            self.tld_grid.addWidget(pill, idx // 4, idx % 4)
 
-        layout_tlds.addLayout(self.tld_grid)
+        left_layout.addLayout(self.tld_grid)
 
         # Custom TLD Input Row with + Add Button
         add_tld_layout = QHBoxLayout()
@@ -321,25 +312,24 @@ class ScannerInterface(QWidget):
 
         self.btn_add_tld = PrimaryPushButton(FIF.ADD, "Add")
         self.btn_add_tld.setFixedHeight(30)
-        self.btn_add_tld.setFixedWidth(75)
+        self.btn_add_tld.setFixedWidth(70)
         self.btn_add_tld.clicked.connect(self._add_custom_tld_from_input)
 
         add_tld_layout.addWidget(self.custom_tld_edit, 1)
         add_tld_layout.addWidget(self.btn_add_tld, 0)
-        layout_tlds.addLayout(add_tld_layout)
+        left_layout.addLayout(add_tld_layout)
 
-        left_layout.addWidget(card_tlds)
+        # Separator line
+        sep2 = QFrame()
+        sep2.setFrameShape(QFrame.Shape.HLine)
+        sep2.setStyleSheet("color: #27272a;")
+        left_layout.addWidget(sep2)
 
         # -------------------------------------------------------------
-        # CARD 3: Verification Engine & Performance Settings
+        # SECTION 3: Engine & Settings
         # -------------------------------------------------------------
-        card_engine = CardWidget()
-        layout_engine = QVBoxLayout(card_engine)
-        layout_engine.setContentsMargins(14, 14, 14, 14)
-        layout_engine.setSpacing(10)
-
         lbl_engine_title = StrongBodyLabel("Engine & Performance")
-        layout_engine.addWidget(lbl_engine_title)
+        left_layout.addWidget(lbl_engine_title)
 
         # Mode Combobox (Full Width)
         self.engine_combo = ComboBox()
@@ -349,7 +339,7 @@ class ScannerInterface(QWidget):
         ])
         self.engine_combo.setCurrentIndex(0)
         self.engine_combo.setFixedHeight(30)
-        layout_engine.addWidget(self.engine_combo)
+        left_layout.addWidget(self.engine_combo)
 
         # Workers Slider Block
         self.workers_val_lbl = StrongBodyLabel("12 workers")
@@ -357,9 +347,9 @@ class ScannerInterface(QWidget):
         self.workers_slider = Slider(Qt.Orientation.Horizontal)
         self.workers_slider.setRange(3, 25)
         self.workers_slider.setValue(12)
-        self.workers_slider.setFixedHeight(20)
+        self.workers_slider.setFixedHeight(18)
         self.workers_slider.valueChanged.connect(lambda v: self.workers_val_lbl.setText(f"{v} workers"))
-        layout_engine.addWidget(self._make_slider_block("Concurrent Workers:", self.workers_slider, self.workers_val_lbl))
+        left_layout.addWidget(self._make_slider_block("Concurrent Workers:", self.workers_slider, self.workers_val_lbl))
 
         # Delay Slider Block
         self.delay_val_lbl = StrongBodyLabel("50 ms")
@@ -367,9 +357,9 @@ class ScannerInterface(QWidget):
         self.delay_slider = Slider(Qt.Orientation.Horizontal)
         self.delay_slider.setRange(0, 500)
         self.delay_slider.setValue(50)
-        self.delay_slider.setFixedHeight(20)
+        self.delay_slider.setFixedHeight(18)
         self.delay_slider.valueChanged.connect(lambda v: self.delay_val_lbl.setText(f"{v} ms"))
-        layout_engine.addWidget(self._make_slider_block("Request Delay (anti-ban):", self.delay_slider, self.delay_val_lbl))
+        left_layout.addWidget(self._make_slider_block("Request Delay (anti-ban):", self.delay_slider, self.delay_val_lbl))
 
         # Default Registrar Row (GoDaddy #1 default)
         self.combo_default_reg = ComboBox()
@@ -377,12 +367,16 @@ class ScannerInterface(QWidget):
         self.combo_default_reg.setCurrentText("GoDaddy")
         self.combo_default_reg.currentTextChanged.connect(self._on_registrar_changed)
         self.combo_default_reg.setFixedWidth(150)
-        layout_engine.addWidget(self._make_form_row("Default Registrar:", self.combo_default_reg))
+        left_layout.addWidget(self._make_form_row("Default Registrar:", self.combo_default_reg))
 
-        left_layout.addWidget(card_engine)
+        # Separator line
+        sep3 = QFrame()
+        sep3.setFrameShape(QFrame.Shape.HLine)
+        sep3.setStyleSheet("color: #27272a;")
+        left_layout.addWidget(sep3)
 
         # -------------------------------------------------------------
-        # Action Buttons (Start / Stop / Clear)
+        # SECTION 4: Action Buttons (Always Visible Without Scrolling)
         # -------------------------------------------------------------
         btn_action_layout = QHBoxLayout()
         btn_action_layout.setContentsMargins(0, 0, 0, 0)
@@ -410,7 +404,7 @@ class ScannerInterface(QWidget):
         left_layout.addLayout(btn_action_layout)
 
         left_layout.addStretch()
-        left_scroll.setWidget(left_widget)
+        left_scroll.setWidget(left_container)
         splitter.addWidget(left_scroll)
 
         # -------------------------------------------------------------
@@ -595,7 +589,7 @@ class ScannerInterface(QWidget):
         return block
 
     # -------------------------------------------------------------
-    # Mode Configuration Widgets (Spacious & Clean Layouts)
+    # Mode Configuration Widgets (Compact & Clean Layouts)
     # -------------------------------------------------------------
     def _build_batch_page(self):
         page = QWidget()
@@ -609,7 +603,7 @@ class ScannerInterface(QWidget):
 
         self.txt_batch = PlainTextEdit()
         self.txt_batch.setPlainText("google.com\napple.com\nmybrandapp\nflowhub\nnexustech")
-        self.txt_batch.setFixedHeight(110)
+        self.txt_batch.setFixedHeight(85)
         self.txt_batch.setFont(QFont("Consolas", 10))
         layout.addWidget(self.txt_batch)
 
@@ -619,7 +613,7 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         # Row 1: Length
         self.spin_letter_len = SpinBox()
@@ -670,7 +664,7 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         # Row 1: Keyword entry
         self.kw_edit = LineEdit()
@@ -730,7 +724,7 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         lbl = CaptionLabel("Tests curated short startup brandable roots\n(e.g. velo, koba, zira, lux, nova, apex)")
         lbl.setTextColor("#a1a1aa", "#71717a")
@@ -805,7 +799,7 @@ class ScannerInterface(QWidget):
                 added_count += 1
                 continue
 
-            # Create new PillPushButton dynamically in the 3-column grid
+            # Create new PillPushButton dynamically in the 4-column grid
             pill = PillPushButton(clean)
             pill.setCheckable(True)
             pill.setChecked(True)
@@ -814,7 +808,7 @@ class ScannerInterface(QWidget):
 
             idx = len(self.tld_pills)
             self.tld_pills[clean] = pill
-            self.tld_grid.addWidget(pill, idx // 3, idx % 3)
+            self.tld_grid.addWidget(pill, idx // 4, idx % 4)
             added_count += 1
 
         self.custom_tld_edit.clear()
@@ -1249,6 +1243,10 @@ class MainWindow(FluentWindow):
         self.setWindowTitle("Domain Availability Scraper")
         self.resize(1540, 880)
         self.setMinimumSize(1100, 680)
+
+        # Lock navigation interface permanently to compact icon-only mode with no hamburger menu
+        self.navigationInterface.setMenuButtonVisible(False)
+        self.navigationInterface.setCollapsible(False)
 
         # Navigation interfaces
         self.scanner_interface = ScannerInterface(self)
