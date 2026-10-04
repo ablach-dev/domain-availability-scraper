@@ -18,7 +18,8 @@ from PyQt6.QtGui import QIcon, QFont, QColor
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QHeaderView, QTableWidgetItem, QFileDialog, QSplitter, QFrame,
-    QStackedWidget, QLabel, QButtonGroup, QSizePolicy, QAbstractItemView
+    QStackedWidget, QLabel, QButtonGroup, QSizePolicy, QAbstractItemView,
+    QScrollArea
 )
 
 from qfluentwidgets import (
@@ -189,12 +190,34 @@ class ScannerInterface(QWidget):
         """)
 
         # -------------------------------------------------------------
-        # LEFT PANEL: Search Configuration Area (Generous width ~530px)
+        # LEFT PANEL: Search Configuration Area (Native 120 FPS QScrollArea)
         # -------------------------------------------------------------
-        left_scroll = ScrollArea()
+        left_scroll = QScrollArea()
         left_scroll.setWidgetResizable(True)
-        left_scroll.setMinimumWidth(500)
-        left_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        left_scroll.setMinimumWidth(490)
+        left_scroll.viewport().setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+        left_scroll.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background: transparent;
+            }
+            QScrollBar:vertical {
+                background: transparent;
+                width: 8px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #3f3f46;
+                min-height: 28px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #52525b;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
 
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
@@ -466,11 +489,11 @@ class ScannerInterface(QWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 240)
-        self.table.setColumnWidth(1, 110)
-        self.table.setColumnWidth(2, 70)
-        self.table.setColumnWidth(3, 190)
-        self.table.setColumnWidth(5, 95)
+        self.table.setColumnWidth(0, 260)
+        self.table.setColumnWidth(1, 130)
+        self.table.setColumnWidth(2, 90)
+        self.table.setColumnWidth(3, 230)
+        self.table.setColumnWidth(5, 110)
 
         self.table.setSortingEnabled(True)
         self.table.setWordWrap(False)
@@ -512,10 +535,10 @@ class ScannerInterface(QWidget):
 
         splitter.addWidget(right_container)
 
-        # Splitter proportion defaults (generous left panel)
+        # Splitter proportion defaults (generous left panel + expansive right table)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
-        splitter.setSizes([540, 800])
+        splitter.setSizes([490, 1050])
 
         root_layout.addWidget(splitter)
 
@@ -1226,8 +1249,8 @@ class MainWindow(FluentWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Domain Availability Scraper")
-        self.resize(1340, 860)
-        self.setMinimumSize(1080, 700)
+        self.resize(1580, 920)
+        self.setMinimumSize(1200, 740)
 
         # Navigation interfaces
         self.scanner_interface = ScannerInterface(self)
