@@ -615,12 +615,13 @@ class ScannerInterface(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        # Row 1: Length
-        self.spin_letter_len = SpinBox()
-        self.spin_letter_len.setRange(2, 12)
-        self.spin_letter_len.setValue(4)
-        self.spin_letter_len.setFixedWidth(100)
-        layout.addWidget(self._make_form_row("Letter Length:", self.spin_letter_len))
+        # Row 1: Length (Direct numeric input, zero arrow buttons)
+        self.edit_letter_len = LineEdit()
+        self.edit_letter_len.setText("4")
+        self.edit_letter_len.setFixedWidth(80)
+        self.edit_letter_len.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.edit_letter_len.setPlaceholderText("4")
+        layout.addWidget(self._make_form_row("Letter Length:", self.edit_letter_len))
 
         # Row 2: Pattern Style
         self.combo_letter_style = ComboBox()
@@ -650,13 +651,13 @@ class ScannerInterface(QWidget):
         layout.addWidget(self.pattern_container)
         self.pattern_container.hide()
 
-        # Row 4: Max Count Limit
-        self.spin_letter_limit = SpinBox()
-        self.spin_letter_limit.setRange(10, 500)
-        self.spin_letter_limit.setValue(50)
-        self.spin_letter_limit.setSingleStep(25)
-        self.spin_letter_limit.setFixedWidth(100)
-        layout.addWidget(self._make_form_row("Max Count:", self.spin_letter_limit))
+        # Row 4: Max Count Limit (Direct numeric input, zero arrow buttons)
+        self.edit_letter_limit = LineEdit()
+        self.edit_letter_limit.setText("50")
+        self.edit_letter_limit.setFixedWidth(80)
+        self.edit_letter_limit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.edit_letter_limit.setPlaceholderText("50")
+        layout.addWidget(self._make_form_row("Max Count:", self.edit_letter_limit))
 
         self.stacked_modes.addWidget(page)
 
@@ -711,12 +712,13 @@ class ScannerInterface(QWidget):
         layout.addWidget(self.custom_affix_container)
         self.custom_affix_container.hide()
 
-        # Row 5: Limit
-        self.spin_kw_limit = SpinBox()
-        self.spin_kw_limit.setRange(10, 300)
-        self.spin_kw_limit.setValue(50)
-        self.spin_kw_limit.setFixedWidth(100)
-        layout.addWidget(self._make_form_row("Max Count:", self.spin_kw_limit))
+        # Row 5: Limit (Direct numeric input, zero arrow buttons)
+        self.edit_kw_limit = LineEdit()
+        self.edit_kw_limit.setText("50")
+        self.edit_kw_limit.setFixedWidth(80)
+        self.edit_kw_limit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.edit_kw_limit.setPlaceholderText("50")
+        layout.addWidget(self._make_form_row("Max Count:", self.edit_kw_limit))
 
         self.stacked_modes.addWidget(page)
 
@@ -730,11 +732,13 @@ class ScannerInterface(QWidget):
         lbl.setTextColor("#a1a1aa", "#71717a")
         layout.addWidget(lbl)
 
-        self.spin_brand_limit = SpinBox()
-        self.spin_brand_limit.setRange(10, 80)
-        self.spin_brand_limit.setValue(30)
-        self.spin_brand_limit.setFixedWidth(100)
-        layout.addWidget(self._make_form_row("Root Count:", self.spin_brand_limit))
+        # Direct numeric input, zero arrow buttons
+        self.edit_brand_limit = LineEdit()
+        self.edit_brand_limit.setText("30")
+        self.edit_brand_limit.setFixedWidth(80)
+        self.edit_brand_limit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.edit_brand_limit.setPlaceholderText("30")
+        layout.addWidget(self._make_form_row("Root Count:", self.edit_brand_limit))
 
         self.stacked_modes.addWidget(page)
 
@@ -838,7 +842,10 @@ class ScannerInterface(QWidget):
             return parse_custom_domains(text, tlds)
 
         elif idx == 1:  # Letter Length
-            length = self.spin_letter_len.value()
+            try:
+                length = int(self.edit_letter_len.text().strip() or "4")
+            except ValueError:
+                length = 4
             style_map = {
                 "Pronounceable (CVCV)": "pronounceable",
                 "Letters (a-z)": "letters",
@@ -848,7 +855,10 @@ class ScannerInterface(QWidget):
             }
             style = style_map.get(self.combo_letter_style.currentText(), "pronounceable")
             pattern = self.pattern_edit.text().strip() if style == "pattern" else ""
-            limit = self.spin_letter_limit.value()
+            try:
+                limit = int(self.edit_letter_limit.text().strip() or "50")
+            except ValueError:
+                limit = 50
             return generate_letter_domains(
                 length=length,
                 mode=style,
@@ -871,7 +881,10 @@ class ScannerInterface(QWidget):
             km = mode_map.get(self.combo_kw_mode.currentText(), "both")
             niche = self.combo_niche.currentText() if km == "niche" else ""
             affixes = [a.strip() for a in self.custom_affix_edit.text().replace(",", " ").split() if a.strip()]
-            limit = self.spin_kw_limit.value()
+            try:
+                limit = int(self.edit_kw_limit.text().strip() or "50")
+            except ValueError:
+                limit = 50
             return generate_keyword_domains(
                 keywords=kw_list,
                 mode=km,
@@ -882,7 +895,10 @@ class ScannerInterface(QWidget):
             )
 
         elif idx == 3:  # Brandables
-            limit = self.spin_brand_limit.value()
+            try:
+                limit = int(self.edit_brand_limit.text().strip() or "30")
+            except ValueError:
+                limit = 30
             return generate_brandable_domains(tlds=tlds, max_count=limit)
 
         return []
@@ -1244,9 +1260,11 @@ class MainWindow(FluentWindow):
         self.resize(1540, 880)
         self.setMinimumSize(1100, 680)
 
-        # Lock navigation interface permanently to compact icon-only mode with no hamburger menu
+        # Lock navigation interface permanently to a tiny 48px icon-only rail with NO hamburger menu and NO text
         self.navigationInterface.setMenuButtonVisible(False)
         self.navigationInterface.setCollapsible(False)
+        self.navigationInterface.setFixedWidth(48)
+        self.navigationInterface.setExpandWidth(48)
 
         # Navigation interfaces
         self.scanner_interface = ScannerInterface(self)
@@ -1256,22 +1274,23 @@ class MainWindow(FluentWindow):
         self._init_navigation()
 
     def _init_navigation(self):
+        # Pass empty string for text: pure icons only, zero text
         self.addSubInterface(
             self.scanner_interface,
             FIF.SEARCH,
-            "Scanner",
+            "",
             NavigationItemPosition.TOP
         )
         self.addSubInterface(
             self.settings_interface,
             FIF.SETTING,
-            "Settings",
+            "",
             NavigationItemPosition.BOTTOM
         )
         self.addSubInterface(
             self.info_interface,
             FIF.INFO,
-            "Architecture",
+            "",
             NavigationItemPosition.BOTTOM
         )
 
