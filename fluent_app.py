@@ -1311,9 +1311,11 @@ class MainWindow(FluentWindow):
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        self.navigationInterface.setFixedWidth(48)
-        panel = getattr(self.navigationInterface, 'panel', self.navigationInterface)
-        panel.setFixedWidth(48)
+        if hasattr(self, "navigationInterface"):
+            self.navigationInterface.setFixedWidth(48)
+            panel = getattr(self.navigationInterface, 'panel', self.navigationInterface)
+            if panel is not None:
+                panel.setFixedWidth(48)
 
 
 def launch_fluent_app():
