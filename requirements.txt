@@ -1,0 +1,6 @@
+# DomainPulse Requirements
+PyQt6>=6.6.0
+PyQt6-Fluent-Widgets>=1.6.0
+customtkinter>=5.2.0
+pillow>=10.0.0
+aiohttp>=3.9.0
