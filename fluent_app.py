@@ -2,7 +2,7 @@
 Domain Availability Scraper - Professional Windows 11 Desktop Application.
 Authoritative Registry WHOIS & RDAP verification engine with PyQt6 and PyQt6-Fluent-Widgets.
 High-performance architecture with 120 FPS batch-buffered GUI rendering,
-pixel-perfect aligned form layouts, and zero-stutter threading.
+compact zero-overflow left panel, and expansive high-resolution data table.
 """
 
 import sys
@@ -29,8 +29,7 @@ from qfluentwidgets import (
     CheckBox, RadioButton, ProgressBar, TableWidget, CardWidget,
     ElevatedCardWidget, FluentIcon as FIF, InfoBar, InfoBarPosition,
     RoundMenu, Action, Pivot, SegmentedWidget, SubtitleLabel, CaptionLabel,
-    BodyLabel, StrongBodyLabel, TitleLabel, setTheme, Theme, MessageBox,
-    ScrollArea
+    BodyLabel, StrongBodyLabel, TitleLabel, setTheme, Theme, MessageBox
 )
 
 from scraper.whois_checker import (
@@ -118,7 +117,6 @@ class ScanWorker(QThread):
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = {executor.submit(check_one, d): d for d in self.domains}
 
-            # as_completed processes results as soon as they finish on the network
             for f in as_completed(futures):
                 if self._is_stopped:
                     break
@@ -145,7 +143,6 @@ class ScanWorker(QThread):
                 except Exception:
                     pass
 
-        # Final flush
         flush_buffer()
         self.scan_finished.emit()
 
@@ -173,15 +170,15 @@ class ScannerInterface(QWidget):
 
     def _init_ui(self):
         root_layout = QHBoxLayout(self)
-        root_layout.setContentsMargins(14, 14, 14, 14)
+        root_layout.setContentsMargins(12, 12, 12, 12)
         root_layout.setSpacing(0)
 
-        # Resizable Splitter between Left Control Panel and Right Results Dashboard
+        # Resizable Splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setStyleSheet("""
             QSplitter::handle {
                 background-color: transparent;
-                width: 10px;
+                width: 8px;
             }
             QSplitter::handle:hover {
                 background-color: rgba(255, 255, 255, 0.12);
@@ -190,11 +187,13 @@ class ScannerInterface(QWidget):
         """)
 
         # -------------------------------------------------------------
-        # LEFT PANEL: Search Configuration Area (Native 120 FPS QScrollArea)
+        # LEFT PANEL: Compact, Zero-Horizontal-Scroll Configuration Area
         # -------------------------------------------------------------
         left_scroll = QScrollArea()
         left_scroll.setWidgetResizable(True)
-        left_scroll.setMinimumWidth(490)
+        left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        left_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        left_scroll.setMinimumWidth(350)
         left_scroll.viewport().setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
         left_scroll.setStyleSheet("""
             QScrollArea {
@@ -203,13 +202,13 @@ class ScannerInterface(QWidget):
             }
             QScrollBar:vertical {
                 background: transparent;
-                width: 8px;
+                width: 7px;
                 margin: 0px;
             }
             QScrollBar::handle:vertical {
                 background: #3f3f46;
                 min-height: 28px;
-                border-radius: 4px;
+                border-radius: 3px;
             }
             QScrollBar::handle:vertical:hover {
                 background: #52525b;
@@ -221,33 +220,33 @@ class ScannerInterface(QWidget):
 
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(6, 4, 16, 8)
-        left_layout.setSpacing(16)
+        left_layout.setContentsMargins(2, 2, 8, 4)
+        left_layout.setSpacing(12)
 
         # -------------------------------------------------------------
-        # CARD 1: Mode & Search Parameters
+        # CARD 1: Mode & Search Parameters (Compact)
         # -------------------------------------------------------------
         card_params = CardWidget()
         layout_params = QVBoxLayout(card_params)
-        layout_params.setContentsMargins(20, 20, 20, 20)
-        layout_params.setSpacing(14)
+        layout_params.setContentsMargins(14, 14, 14, 14)
+        layout_params.setSpacing(10)
 
         # Section Header
         lbl_params_title = StrongBodyLabel("Search Parameters")
-        lbl_params_desc = CaptionLabel("Select generation mode and configure target combinations")
+        lbl_params_desc = CaptionLabel("Select generation mode and configure rules")
         lbl_params_desc.setTextColor("#a1a1aa", "#71717a")
         layout_params.addWidget(lbl_params_title)
         layout_params.addWidget(lbl_params_desc)
 
-        # Mode Pivot Tabs
-        self.pivot = Pivot(self)
-        self.pivot.addItem("batch", "Batch List")
-        self.pivot.addItem("letters", "Letter Length")
-        self.pivot.addItem("keyword", "Keyword Affixes")
-        self.pivot.addItem("brandables", "Brandables")
-        self.pivot.setCurrentItem("batch")
-        self.pivot.currentItemChanged.connect(self._on_pivot_changed)
-        layout_params.addWidget(self.pivot)
+        # Mode Segmented Tabs (Compact ~250px)
+        self.segment = SegmentedWidget(self)
+        self.segment.addItem("batch", "List")
+        self.segment.addItem("letters", "Length")
+        self.segment.addItem("keyword", "Keywords")
+        self.segment.addItem("brandables", "Roots")
+        self.segment.setCurrentItem("batch")
+        self.segment.currentItemChanged.connect(self._on_segment_changed)
+        layout_params.addWidget(self.segment)
 
         # Mode Stacked Pages
         self.stacked_modes = QStackedWidget()
@@ -264,39 +263,38 @@ class ScannerInterface(QWidget):
         # -------------------------------------------------------------
         card_tlds = CardWidget()
         layout_tlds = QVBoxLayout(card_tlds)
-        layout_tlds.setContentsMargins(20, 20, 20, 20)
-        layout_tlds.setSpacing(14)
+        layout_tlds.setContentsMargins(14, 14, 14, 14)
+        layout_tlds.setSpacing(10)
 
-        # Title & Subtitle
         lbl_tld_title = StrongBodyLabel("Domain Extensions")
-        lbl_tld_desc = CaptionLabel("Toggle target extensions or enter custom TLDs below")
+        lbl_tld_desc = CaptionLabel("Toggle target extensions or enter custom TLDs")
         lbl_tld_desc.setTextColor("#a1a1aa", "#71717a")
         layout_tlds.addWidget(lbl_tld_title)
         layout_tlds.addWidget(lbl_tld_desc)
 
-        # Preset Quick Filter Bar
+        # Preset Quick Filter Bar (Compact 5 pills)
         preset_bar = QHBoxLayout()
-        preset_bar.setSpacing(6)
+        preset_bar.setContentsMargins(0, 0, 0, 0)
+        preset_bar.setSpacing(4)
         presets = [
             ("Popular", "popular"),
             ("Tech", "tech"),
             ("Startup", "startup"),
-            ("Short", "short"),
             ("All", "all"),
             ("Clear", "none")
         ]
         for name, key in presets:
             btn = PushButton(name)
-            btn.setFixedHeight(26)
-            btn.setFont(QFont("Segoe UI", 9))
+            btn.setFixedHeight(24)
+            btn.setFont(QFont("Segoe UI", 8))
             btn.clicked.connect(lambda checked, k=key: self._apply_tld_preset(k))
             preset_bar.addWidget(btn)
         preset_bar.addStretch()
         layout_tlds.addLayout(preset_bar)
 
-        # Grid of Modern Pill Buttons (3 columns for generous spacing)
+        # Grid of Modern Pill Buttons (3 columns)
         self.tld_grid = QGridLayout()
-        self.tld_grid.setSpacing(8)
+        self.tld_grid.setSpacing(6)
         self.tld_grid.setContentsMargins(0, 0, 0, 0)
         default_active = {".com", ".io", ".ai"}
 
@@ -304,8 +302,8 @@ class ScannerInterface(QWidget):
             pill = PillPushButton(tld)
             pill.setCheckable(True)
             pill.setChecked(tld in default_active)
-            pill.setFixedHeight(32)
-            pill.setFont(QFont("Consolas", 10, QFont.Weight.Bold))
+            pill.setFixedHeight(28)
+            pill.setFont(QFont("Consolas", 9, QFont.Weight.Bold))
             self.tld_pills[tld] = pill
             self.tld_grid.addWidget(pill, idx // 3, idx % 3)
 
@@ -314,16 +312,16 @@ class ScannerInterface(QWidget):
         # Custom TLD Input Row with + Add Button
         add_tld_layout = QHBoxLayout()
         add_tld_layout.setContentsMargins(0, 0, 0, 0)
-        add_tld_layout.setSpacing(8)
+        add_tld_layout.setSpacing(6)
 
         self.custom_tld_edit = LineEdit()
-        self.custom_tld_edit.setPlaceholderText("Enter custom TLD (e.g. .store, .club, .gg)")
-        self.custom_tld_edit.setFixedHeight(34)
+        self.custom_tld_edit.setPlaceholderText("Custom TLD (e.g. .store, .club)")
+        self.custom_tld_edit.setFixedHeight(30)
         self.custom_tld_edit.returnPressed.connect(self._add_custom_tld_from_input)
 
-        self.btn_add_tld = PrimaryPushButton(FIF.ADD, "Add TLD")
-        self.btn_add_tld.setFixedHeight(34)
-        self.btn_add_tld.setFixedWidth(110)
+        self.btn_add_tld = PrimaryPushButton(FIF.ADD, "Add")
+        self.btn_add_tld.setFixedHeight(30)
+        self.btn_add_tld.setFixedWidth(75)
         self.btn_add_tld.clicked.connect(self._add_custom_tld_from_input)
 
         add_tld_layout.addWidget(self.custom_tld_edit, 1)
@@ -337,20 +335,20 @@ class ScannerInterface(QWidget):
         # -------------------------------------------------------------
         card_engine = CardWidget()
         layout_engine = QVBoxLayout(card_engine)
-        layout_engine.setContentsMargins(20, 20, 20, 20)
-        layout_engine.setSpacing(14)
+        layout_engine.setContentsMargins(14, 14, 14, 14)
+        layout_engine.setSpacing(10)
 
-        lbl_engine_title = StrongBodyLabel("Verification Engine & Performance")
+        lbl_engine_title = StrongBodyLabel("Engine & Performance")
         layout_engine.addWidget(lbl_engine_title)
 
         # Mode Combobox (Full Width)
         self.engine_combo = ComboBox()
         self.engine_combo.addItems([
-            "Hybrid (Fast DNS Pre-Filter + Authoritative WHOIS)",
-            "Strict Registry WHOIS (All to Registry Socket)"
+            "Hybrid (Fast DNS Pre-Filter + WHOIS)",
+            "Strict Registry WHOIS (All Port 43)"
         ])
         self.engine_combo.setCurrentIndex(0)
-        self.engine_combo.setFixedHeight(34)
+        self.engine_combo.setFixedHeight(30)
         layout_engine.addWidget(self.engine_combo)
 
         # Workers Slider Block
@@ -359,7 +357,7 @@ class ScannerInterface(QWidget):
         self.workers_slider = Slider(Qt.Orientation.Horizontal)
         self.workers_slider.setRange(3, 25)
         self.workers_slider.setValue(12)
-        self.workers_slider.setFixedHeight(22)
+        self.workers_slider.setFixedHeight(20)
         self.workers_slider.valueChanged.connect(lambda v: self.workers_val_lbl.setText(f"{v} workers"))
         layout_engine.addWidget(self._make_slider_block("Concurrent Workers:", self.workers_slider, self.workers_val_lbl))
 
@@ -369,40 +367,40 @@ class ScannerInterface(QWidget):
         self.delay_slider = Slider(Qt.Orientation.Horizontal)
         self.delay_slider.setRange(0, 500)
         self.delay_slider.setValue(50)
-        self.delay_slider.setFixedHeight(22)
+        self.delay_slider.setFixedHeight(20)
         self.delay_slider.valueChanged.connect(lambda v: self.delay_val_lbl.setText(f"{v} ms"))
-        layout_engine.addWidget(self._make_slider_block("Request Delay (anti-rate-limit):", self.delay_slider, self.delay_val_lbl))
+        layout_engine.addWidget(self._make_slider_block("Request Delay (anti-ban):", self.delay_slider, self.delay_val_lbl))
 
-        # Default Registrar Row (Consistent form row)
+        # Default Registrar Row (GoDaddy #1 default)
         self.combo_default_reg = ComboBox()
         self.combo_default_reg.addItems(["GoDaddy", "Cloudflare", "Dynadot", "Namecheap", "Porkbun"])
         self.combo_default_reg.setCurrentText("GoDaddy")
         self.combo_default_reg.currentTextChanged.connect(self._on_registrar_changed)
-        self.combo_default_reg.setFixedWidth(180)
+        self.combo_default_reg.setFixedWidth(150)
         layout_engine.addWidget(self._make_form_row("Default Registrar:", self.combo_default_reg))
 
         left_layout.addWidget(card_engine)
 
         # -------------------------------------------------------------
-        # Action Buttons (Prominent Start / Stop / Clear)
+        # Action Buttons (Start / Stop / Clear)
         # -------------------------------------------------------------
         btn_action_layout = QHBoxLayout()
         btn_action_layout.setContentsMargins(0, 0, 0, 0)
-        btn_action_layout.setSpacing(10)
+        btn_action_layout.setSpacing(8)
 
         self.btn_start = PrimaryPushButton(FIF.PLAY, "Start Search")
-        self.btn_start.setFixedHeight(40)
-        self.btn_start.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self.btn_start.setFixedHeight(38)
+        self.btn_start.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         self.btn_start.clicked.connect(self.start_scan)
 
         self.btn_stop = PushButton(FIF.CANCEL, "Stop")
-        self.btn_stop.setFixedHeight(40)
+        self.btn_stop.setFixedHeight(38)
         self.btn_stop.setFont(QFont("Segoe UI", 9))
         self.btn_stop.setEnabled(False)
         self.btn_stop.clicked.connect(self.stop_scan)
 
         self.btn_clear = PushButton(FIF.DELETE, "Clear")
-        self.btn_clear.setFixedHeight(40)
+        self.btn_clear.setFixedHeight(38)
         self.btn_clear.setFont(QFont("Segoe UI", 9))
         self.btn_clear.clicked.connect(self.clear_results)
 
@@ -416,18 +414,18 @@ class ScannerInterface(QWidget):
         splitter.addWidget(left_scroll)
 
         # -------------------------------------------------------------
-        # RIGHT PANEL: Data Table & Live Results
+        # RIGHT PANEL: Expansive Data Table & Results Dashboard
         # -------------------------------------------------------------
         right_container = CardWidget()
         right_layout = QVBoxLayout(right_container)
-        right_layout.setContentsMargins(20, 20, 20, 20)
-        right_layout.setSpacing(14)
+        right_layout.setContentsMargins(18, 16, 18, 16)
+        right_layout.setSpacing(12)
 
-        # 1. KPI Metrics Banner (Mathematical 5-Tile Grid with zero jitter)
+        # 1. KPI Metrics Banner (5 Centered Mathematical Tiles)
         kpi_frame = ElevatedCardWidget()
         kpi_layout = QHBoxLayout(kpi_frame)
-        kpi_layout.setContentsMargins(12, 10, 12, 10)
-        kpi_layout.setSpacing(8)
+        kpi_layout.setContentsMargins(10, 8, 10, 8)
+        kpi_layout.setSpacing(6)
 
         t1, self.lbl_stat_checked = self._create_kpi_tile("TOTAL CHECKED", "0 / 0")
         t2, self.lbl_stat_available = self._create_kpi_tile("AVAILABLE", "0", text_color="#22c55e")
@@ -469,13 +467,13 @@ class ScannerInterface(QWidget):
 
         self.search_filter_edit = SearchLineEdit()
         self.search_filter_edit.setPlaceholderText("Filter domain results...")
-        self.search_filter_edit.setFixedWidth(280)
-        self.search_filter_edit.setFixedHeight(32)
+        self.search_filter_edit.setFixedWidth(260)
+        self.search_filter_edit.setFixedHeight(30)
         self.search_filter_edit.textChanged.connect(self._apply_filters)
         filter_bar_layout.addWidget(self.search_filter_edit)
         right_layout.addLayout(filter_bar_layout)
 
-        # 3. Main Fluent Data Table (Fixed column widths for 120 FPS rendering)
+        # 3. Main Fluent Data Table (Fixed column widths for zero horizontal overflow)
         self.table = TableWidget()
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
@@ -489,11 +487,11 @@ class ScannerInterface(QWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 260)
-        self.table.setColumnWidth(1, 130)
-        self.table.setColumnWidth(2, 90)
-        self.table.setColumnWidth(3, 230)
-        self.table.setColumnWidth(5, 110)
+        self.table.setColumnWidth(0, 250)
+        self.table.setColumnWidth(1, 120)
+        self.table.setColumnWidth(2, 80)
+        self.table.setColumnWidth(3, 220)
+        self.table.setColumnWidth(5, 100)
 
         self.table.setSortingEnabled(True)
         self.table.setWordWrap(False)
@@ -535,10 +533,10 @@ class ScannerInterface(QWidget):
 
         splitter.addWidget(right_container)
 
-        # Splitter proportion defaults (generous left panel + expansive right table)
+        # Splitter proportion defaults (compact left panel ~380px, expansive right table ~1160px)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
-        splitter.setSizes([490, 1050])
+        splitter.setSizes([380, 1160])
 
         root_layout.addWidget(splitter)
 
@@ -548,7 +546,7 @@ class ScannerInterface(QWidget):
     def _create_kpi_tile(self, title_text: str, initial_value: str, text_color: Optional[str] = None):
         tile = QWidget()
         tile_layout = QVBoxLayout(tile)
-        tile_layout.setContentsMargins(4, 4, 4, 4)
+        tile_layout.setContentsMargins(2, 2, 2, 2)
         tile_layout.setSpacing(2)
         tile_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -559,7 +557,7 @@ class ScannerInterface(QWidget):
 
         val_lbl = StrongBodyLabel(initial_value)
         val_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        val_lbl.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        val_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         if text_color:
             val_lbl.setTextColor(text_color, text_color)
 
@@ -571,11 +569,11 @@ class ScannerInterface(QWidget):
         row = QWidget()
         h = QHBoxLayout(row)
         h.setContentsMargins(0, 0, 0, 0)
-        h.setSpacing(10)
+        h.setSpacing(8)
         lbl = BodyLabel(label_text)
         lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         h.addWidget(lbl, 1)
-        widget.setFixedHeight(32)
+        widget.setFixedHeight(30)
         h.addWidget(widget, 0)
         return row
 
@@ -583,7 +581,7 @@ class ScannerInterface(QWidget):
         block = QWidget()
         v = QVBoxLayout(block)
         v.setContentsMargins(0, 0, 0, 0)
-        v.setSpacing(6)
+        v.setSpacing(4)
 
         hdr = QHBoxLayout()
         hdr.setContentsMargins(0, 0, 0, 0)
@@ -603,7 +601,7 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         lbl = CaptionLabel("Enter domain names or words (one per line):")
         lbl.setTextColor("#a1a1aa", "#71717a")
@@ -611,7 +609,7 @@ class ScannerInterface(QWidget):
 
         self.txt_batch = PlainTextEdit()
         self.txt_batch.setPlainText("google.com\napple.com\nmybrandapp\nflowhub\nnexustech")
-        self.txt_batch.setFixedHeight(120)
+        self.txt_batch.setFixedHeight(110)
         self.txt_batch.setFont(QFont("Consolas", 10))
         layout.addWidget(self.txt_batch)
 
@@ -621,13 +619,13 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
 
         # Row 1: Length
         self.spin_letter_len = SpinBox()
         self.spin_letter_len.setRange(2, 12)
         self.spin_letter_len.setValue(4)
-        self.spin_letter_len.setFixedWidth(120)
+        self.spin_letter_len.setFixedWidth(100)
         layout.addWidget(self._make_form_row("Letter Length:", self.spin_letter_len))
 
         # Row 2: Pattern Style
@@ -639,7 +637,7 @@ class ScannerInterface(QWidget):
             "Digits Only",
             "Custom Pattern"
         ])
-        self.combo_letter_style.setFixedWidth(200)
+        self.combo_letter_style.setFixedWidth(160)
         self.combo_letter_style.currentTextChanged.connect(self._on_letter_style_changed)
         layout.addWidget(self._make_form_row("Pattern Style:", self.combo_letter_style))
 
@@ -647,13 +645,13 @@ class ScannerInterface(QWidget):
         self.pattern_container = QWidget()
         pattern_layout = QHBoxLayout(self.pattern_container)
         pattern_layout.setContentsMargins(0, 0, 0, 0)
-        pattern_layout.setSpacing(10)
-        lbl_pat = CaptionLabel("Wildcard Pattern (?=letter, #=digit):")
+        pattern_layout.setSpacing(8)
+        lbl_pat = CaptionLabel("Wildcard (?=let, #=dig):")
         pattern_layout.addWidget(lbl_pat, 1)
         self.pattern_edit = LineEdit()
-        self.pattern_edit.setPlaceholderText("e.g. ?ai, xx?, ?app?")
-        self.pattern_edit.setFixedWidth(200)
-        self.pattern_edit.setFixedHeight(32)
+        self.pattern_edit.setPlaceholderText("e.g. ?ai, xx?")
+        self.pattern_edit.setFixedWidth(160)
+        self.pattern_edit.setFixedHeight(30)
         pattern_layout.addWidget(self.pattern_edit, 0)
         layout.addWidget(self.pattern_container)
         self.pattern_container.hide()
@@ -663,8 +661,8 @@ class ScannerInterface(QWidget):
         self.spin_letter_limit.setRange(10, 500)
         self.spin_letter_limit.setValue(50)
         self.spin_letter_limit.setSingleStep(25)
-        self.spin_letter_limit.setFixedWidth(120)
-        layout.addWidget(self._make_form_row("Max Count Limit:", self.spin_letter_limit))
+        self.spin_letter_limit.setFixedWidth(100)
+        layout.addWidget(self._make_form_row("Max Count:", self.spin_letter_limit))
 
         self.stacked_modes.addWidget(page)
 
@@ -672,12 +670,12 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
 
         # Row 1: Keyword entry
         self.kw_edit = LineEdit()
         self.kw_edit.setText("cloud")
-        self.kw_edit.setFixedWidth(200)
+        self.kw_edit.setFixedWidth(160)
         layout.addWidget(self._make_form_row("Target Keyword:", self.kw_edit))
 
         # Row 2: Mode
@@ -689,7 +687,7 @@ class ScannerInterface(QWidget):
             "Niche Pack",
             "Custom Affixes"
         ])
-        self.combo_kw_mode.setFixedWidth(200)
+        self.combo_kw_mode.setFixedWidth(160)
         self.combo_kw_mode.currentTextChanged.connect(self._on_kw_mode_changed)
         layout.addWidget(self._make_form_row("Affix Mode:", self.combo_kw_mode))
 
@@ -697,11 +695,11 @@ class ScannerInterface(QWidget):
         self.niche_container = QWidget()
         niche_layout = QHBoxLayout(self.niche_container)
         niche_layout.setContentsMargins(0, 0, 0, 0)
-        niche_layout.setSpacing(10)
+        niche_layout.setSpacing(8)
         niche_layout.addWidget(CaptionLabel("Industry Niche:"), 1)
         self.combo_niche = ComboBox()
         self.combo_niche.addItems(list(NICHE_PACKS.keys()))
-        self.combo_niche.setFixedWidth(200)
+        self.combo_niche.setFixedWidth(160)
         niche_layout.addWidget(self.combo_niche, 0)
         layout.addWidget(self.niche_container)
         self.niche_container.hide()
@@ -710,11 +708,11 @@ class ScannerInterface(QWidget):
         self.custom_affix_container = QWidget()
         custom_layout = QHBoxLayout(self.custom_affix_container)
         custom_layout.setContentsMargins(0, 0, 0, 0)
-        custom_layout.setSpacing(10)
+        custom_layout.setSpacing(8)
         custom_layout.addWidget(CaptionLabel("Custom Words:"), 1)
         self.custom_affix_edit = LineEdit()
         self.custom_affix_edit.setPlaceholderText("fast, smart, zone")
-        self.custom_affix_edit.setFixedWidth(200)
+        self.custom_affix_edit.setFixedWidth(160)
         custom_layout.addWidget(self.custom_affix_edit, 0)
         layout.addWidget(self.custom_affix_container)
         self.custom_affix_container.hide()
@@ -723,8 +721,8 @@ class ScannerInterface(QWidget):
         self.spin_kw_limit = SpinBox()
         self.spin_kw_limit.setRange(10, 300)
         self.spin_kw_limit.setValue(50)
-        self.spin_kw_limit.setFixedWidth(120)
-        layout.addWidget(self._make_form_row("Max Count Limit:", self.spin_kw_limit))
+        self.spin_kw_limit.setFixedWidth(100)
+        layout.addWidget(self._make_form_row("Max Count:", self.spin_kw_limit))
 
         self.stacked_modes.addWidget(page)
 
@@ -732,7 +730,7 @@ class ScannerInterface(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
 
         lbl = CaptionLabel("Tests curated short startup brandable roots\n(e.g. velo, koba, zira, lux, nova, apex)")
         lbl.setTextColor("#a1a1aa", "#71717a")
@@ -741,12 +739,12 @@ class ScannerInterface(QWidget):
         self.spin_brand_limit = SpinBox()
         self.spin_brand_limit.setRange(10, 80)
         self.spin_brand_limit.setValue(30)
-        self.spin_brand_limit.setFixedWidth(120)
+        self.spin_brand_limit.setFixedWidth(100)
         layout.addWidget(self._make_form_row("Root Count:", self.spin_brand_limit))
 
         self.stacked_modes.addWidget(page)
 
-    def _on_pivot_changed(self, item_key: str):
+    def _on_segment_changed(self, item_key: str):
         mapping = {"batch": 0, "letters": 1, "keyword": 2, "brandables": 3}
         self.stacked_modes.setCurrentIndex(mapping.get(item_key, 0))
 
@@ -811,8 +809,8 @@ class ScannerInterface(QWidget):
             pill = PillPushButton(clean)
             pill.setCheckable(True)
             pill.setChecked(True)
-            pill.setFixedHeight(32)
-            pill.setFont(QFont("Consolas", 10, QFont.Weight.Bold))
+            pill.setFixedHeight(28)
+            pill.setFont(QFont("Consolas", 9, QFont.Weight.Bold))
 
             idx = len(self.tld_pills)
             self.tld_pills[clean] = pill
@@ -1249,8 +1247,8 @@ class MainWindow(FluentWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Domain Availability Scraper")
-        self.resize(1580, 920)
-        self.setMinimumSize(1200, 740)
+        self.resize(1540, 880)
+        self.setMinimumSize(1100, 680)
 
         # Navigation interfaces
         self.scanner_interface = ScannerInterface(self)
